@@ -26,3 +26,5 @@ RUN apt-get -qqy update && \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN go get github.com/kardianos/govendor
+
+EXPOSE "3000"
