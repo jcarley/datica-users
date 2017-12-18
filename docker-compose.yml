@@ -1,0 +1,20 @@
+version: '3'
+services:
+  db:
+    image: postgres:9.5.3
+    volumes:
+      - ./sql:/app/sql
+    ports:
+      - "5432:5432"
+    environment:
+      - TERM=xterm
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=datica_users_dev
+  shell:
+    build: .
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    depends_on:
+      - db
