@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	AuthenticationError = errors.New("Authentication for user failed")
+	ErrAuthenticationFailed = errors.New("Authentication for user failed")
 )
 
 type CredentialProvider interface {
@@ -49,6 +49,6 @@ func (this *AuthenticationController) Authenticate(rw http.ResponseWriter, req *
 		jsonutil.EncodeJSONToWriter(rw, &authToken)
 
 	} else {
-		web.Error(rw, AuthenticationError, http.StatusUnauthorized)
+		web.Error(rw, ErrAuthenticationFailed, http.StatusUnauthorized)
 	}
 }

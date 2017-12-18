@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -72,6 +73,11 @@ func FromSignature(r *http.Request) (string, error) {
 	signature := values["signature"].(string)
 
 	return signature, nil
+}
+
+func TokenFromContext(ctx context.Context) (*jwt.Token, bool) {
+	t, ok := ctx.Value("user").(*jwt.Token)
+	return t, ok
 }
 
 func formattedTime() string {
