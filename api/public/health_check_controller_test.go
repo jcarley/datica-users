@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/jcarley/datica-users/test"
 	"github.com/jcarley/datica-users/web"
-	"github.com/jcarley/s3lite/test"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
