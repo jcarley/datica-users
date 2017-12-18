@@ -7,6 +7,7 @@ import (
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jcarley/datica-users/helper/jsonutil"
+	"github.com/jcarley/datica-users/helper/structutil"
 )
 
 var (
@@ -28,7 +29,7 @@ type Header struct {
 type Claim struct {
 	UserId   string `json:"userid"`
 	Username string `json:"username"`
-	IAT      string `json:"iat"`
+	IAT      string `json:"iat"` // Issued At Time
 }
 
 // authToken := web.NewAuthToken(token, sig)
@@ -53,6 +54,10 @@ func Signature(claim Claim) (string, *jwt.Token) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 	ss, _ := token.SignedString(mySigningKey)
 	return ss, token
+}
+
+func DecodeFromJSON(values map[string]interface{}, token *AuthToken) error {
+	return structutil.Decode(values, token)
 }
 
 func FromSignature(r *http.Request) (string, error) {
