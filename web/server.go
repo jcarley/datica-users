@@ -12,6 +12,10 @@ import (
 	"github.com/tylerb/graceful"
 )
 
+var (
+	ErrTokenExpired = errors.New("Token has expired")
+)
+
 type HttpServer struct {
 	Port          string
 	Router        *mux.Router
@@ -50,7 +54,7 @@ func authHandler(publicRouter *mux.Router, privateRouter *mux.Router) negroni.Ha
 
 		if ok {
 			if tokenHasExpired(authToken) {
-				Error(rw, errors.New("Token has expired"), http.StatusUnauthorized)
+				Error(rw, ErrTokenExpired, http.StatusUnauthorized)
 			} else {
 				privateRouter.ServeHTTP(rw, r)
 			}
