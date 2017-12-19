@@ -29,6 +29,7 @@ func NewAuthenticationController(credentialProvider CredentialProvider) *Authent
 
 func (this *AuthenticationController) Register(server *web.HttpServer) {
 	server.Post("/auth", this.Authenticate)
+	server.SecureDelete("/auth", this.Delete)
 }
 
 func (this *AuthenticationController) Authenticate(rw http.ResponseWriter, req *http.Request) {
@@ -51,4 +52,7 @@ func (this *AuthenticationController) Authenticate(rw http.ResponseWriter, req *
 	} else {
 		web.Error(rw, ErrAuthenticationFailed, http.StatusUnauthorized)
 	}
+}
+
+func (this *AuthenticationController) Delete(rw http.ResponseWriter, req *http.Request) {
 }
