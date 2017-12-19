@@ -65,8 +65,8 @@ Delete a given user's info
 
   Example:
 
-curl -s \
-  -XDELETE \
-  -H "Content-Type: application/json" \
-  -H "Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyaWQiOiJmMTNmOGEwNi01MWY5LTRiYTctYjAzNC02M2YwNGZjNmU0NzMiLCJ1c2VybmFtZSI6ImplZmYuY2FybGV5QGV4YW1wbGUuY29tIiwiaWF0IjoiMjAxNy0xMi0xOVQxNjowODoxNVoifQ.ASdFIBKHTGTPI1Tq9oguCcSJezXeMws-LLzFr6VFMAU" \
-  http://localhost:3000/user/jeff.carley@example.com
+    curl -s \
+      -XDELETE \
+      -H "Content-Type: application/json" \
+      -H "Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyaWQiOiJmMTNmOGEwNi01MWY5LTRiYTctYjAzNC02M2YwNGZjNmU0NzMiLCJ1c2VybmFtZSI6ImplZmYuY2FybGV5QGV4YW1wbGUuY29tIiwiaWF0IjoiMjAxNy0xMi0xOVQxNjowODoxNVoifQ.ASdFIBKHTGTPI1Tq9oguCcSJezXeMws-LLzFr6VFMAU" \
+      http://localhost:3000/user/jeff.carley@example.com
