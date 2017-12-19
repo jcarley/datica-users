@@ -2,10 +2,12 @@ package users
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
+	"github.com/jcarley/datica-users/helper/encoding"
 	"github.com/jcarley/datica-users/helper/jsonutil"
 	"github.com/jcarley/datica-users/helper/structutil"
 	"github.com/jcarley/datica-users/models"
@@ -83,11 +85,17 @@ func (this *UsersController) Create(rw http.ResponseWriter, req *http.Request) {
 	name := json["name"].(string)
 	password := json["password"].(string)
 
+	salt := encoding.GenerateSalt()
+	encryptedPassword := encoding.Key(password, salt)
+
 	user := models.User{
 		Email:    email,
 		Name:     name,
-		Password: password,
+		Salt:     salt,
+		Password: encryptedPassword,
 	}
+
+	fmt.Printf("=========> %d\n", len(user.Password))
 
 	if newUser, err := this.userRepository.AddUser(user); err == nil {
 		newUser.Password = ""
@@ -118,10 +126,28 @@ func (this *UsersController) Update(rw http.ResponseWriter, req *http.Request) {
 			var updateUser models.User
 			structutil.Decode(&updateUser, json)
 
-			if user, err := this.userRepository.UpdateUser(tokenUserId, updateUser); err == nil {
+			// Pulling the user record first isn't great.  sticking with this
+			// implementation for interest in time.
+			currentUser, err := this.userRepository.FindByUsername(tokenUsername)
+			if err != nil {
+				// didn't find user.  what status code to return for this?
+				web.Error(rw, err, http.StatusUnprocessableEntity)
+				return
+			}
+
+			// current implementation only allows changing the name of the user.  changing the email
+			// which is also acts as the username for signin could result in a loss of login or a unique
+			// constraint database error.  Further implementation could allow an admin to perform this
+			currentUser.Name = updateUser.Name
+
+			// we got the currentUser object from the database and updated its attributes.  we need to
+			// make sure we send the currentUser object to the UpdateUser function
+			if user, err := this.userRepository.UpdateUser(tokenUserId, currentUser); err == nil {
 				user.Salt = ""
 				user.Password = ""
 				jsonutil.EncodeJSONToWriter(rw, &user)
+			} else {
+				web.Error(rw, err, http.StatusInternalServerError)
 			}
 		} else {
 			web.Error(rw, ErrInvalidAuthToken, http.StatusUnauthorized)

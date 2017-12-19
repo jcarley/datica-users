@@ -1,10 +1,17 @@
 package command
 
 import (
+	"fmt"
 	"log"
+	"net/http"
+	"os"
 	"strings"
 
+	"github.com/jcarley/datica-users/api/authentication"
 	"github.com/jcarley/datica-users/api/public"
+	"github.com/jcarley/datica-users/api/users"
+	"github.com/jcarley/datica-users/models"
+	"github.com/jcarley/datica-users/models/postgres"
 	"github.com/jcarley/datica-users/web"
 	"github.com/mitchellh/cli"
 )
@@ -27,21 +34,19 @@ func (this *ServerCommand) Run(args []string) int {
 	this.Ui.Output("==> Datica-users server started! Log data will stream in below:\n")
 
 	// how to get the root
+	file, err := os.Open("db.hcl")
+	if err != nil {
+		log.Fatal("Failed to read db.hcl")
+		return 1
+	}
+	databaseInfo, err := postgres.ReadConfig(file)
+	if err != nil {
+		log.Fatal("Failed to parse db.hcl: ", err.Error())
+		return 1
+	}
+	postgres.Connect(databaseInfo)
+	defer postgres.Disconnect()
 
-	// file, err := os.Open("db.hcl")
-	// if err != nil {
-	// log.Fatal("Failed to read db.hcl")
-	// return 1
-	// }
-	// databaseInfo, err := postgres.ReadConfig(file)
-	// if err != nil {
-	// log.Fatal("Failed to parse db.hcl: ", err.Error())
-	// return 1
-	// }
-	// postgres.Connect(databaseInfo)
-	// defer postgres.Disconnect()
-
-	// this should probably pull items from Tapprd Config
 	server := web.NewHttpServer()
 	server.Port = port
 	this.RegisterControllers(server)
@@ -72,30 +77,20 @@ func (this *ServerCommand) Synopsis() string {
 
 func (this *ServerCommand) RegisterControllers(server *web.HttpServer) {
 
+	userProvider := postgres.NewPostgresUserProvider()
+	userRepository := models.NewUserRepository(userProvider)
+
 	healthCheckController := public.NewHealthCheckController()
 	healthCheckController.Register(server)
 
-	// userProvider := postgres.NewPostgresUserProvider()
-	// userRepository := models.NewUserRepository(userProvider)
+	authenticateController := authentication.NewAuthenticationController(userRepository)
+	authenticateController.Register(server)
 
-	// signatureController := signatures.NewSignatureController()
-	// signatureController.Register(server)
+	usersController := users.NewUsersController(userRepository)
+	usersController.Register(server)
 
-	// authenticateController := authentication.NewAuthenticateController()
-	// authenticateController.SignIn = userRepository.Verify
-	// authenticateController.LookupUser = userRepository.FindByUsername
-	// authenticateController.Register(server)
-
-	// usersController := users.NewUsersController()
-	// usersController.CreateUser = userRepository.CreateUser
-	// usersController.FindUser = userRepository.FindUser
-	// usersController.Register(server)
-
-	// updateController := updates.NewUpdateController()
-	// updateController.Register(server)
-
-	// // this is a stand-in for a health check.  Will move this to a proper health check controller
-	// server.Get("/ping", http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-	// fmt.Fprintf(rw, "pong")
-	// }))
+	// this is a keep-alive check
+	server.Get("/ping", http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		fmt.Fprintf(rw, "pong")
+	}))
 }

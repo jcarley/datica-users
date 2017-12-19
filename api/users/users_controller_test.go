@@ -121,9 +121,14 @@ func TestUpdatingUserData_Integration(t *testing.T) {
 		buffer := rw.Body.Bytes()
 		rawData := test.GetRawData(t, buffer)
 
+		// even though the UpdateUser api call only allows updating the user's name
+		// we assert that email and user_id didn't change.  ensures the correct user
+		// object is being passed to the update inside of the controller
 		So(rw.Code, ShouldEqual, http.StatusOK)
 		So(rawData, ShouldNotBeNil)
 		So(rawData["name"], ShouldEqual, "John Doe")
+		So(rawData["email"], ShouldEqual, "jeff.carley@example.com")
+		So(rawData["user_id"], ShouldEqual, "1234567890")
 	})
 }
 
