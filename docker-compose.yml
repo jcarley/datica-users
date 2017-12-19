@@ -11,6 +11,7 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_USER=admin
       - POSTGRES_DB=datica_users_dev
+
   shell:
     build: .
     command: /bin/bash
@@ -20,3 +21,15 @@ services:
       - "3000:3000"
     depends_on:
       - db
+
+  package:
+    image: datica-users:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.builder
+      args:
+        binary: datica-users
+    working_dir: /go/src/github.com/jcarley/datica-users
+    volumes:
+      - $PWD:/go/src/github.com/jcarley/datica-users
+
