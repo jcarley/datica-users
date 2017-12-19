@@ -1,6 +1,7 @@
 package web
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -45,14 +46,34 @@ func NewHttpServer() *HttpServer {
 
 func authHandler(publicRouter *mux.Router, privateRouter *mux.Router) negroni.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		user := r.Context().Value("user")
-		if user == nil {
-			publicRouter.ServeHTTP(rw, r)
+		authToken, ok := TokenFromContext(r.Context())
+
+		if ok {
+			if tokenHasExpired(authToken) {
+				Error(rw, errors.New("Token has expired"), http.StatusUnauthorized)
+			} else {
+				privateRouter.ServeHTTP(rw, r)
+			}
 		} else {
-			privateRouter.ServeHTTP(rw, r)
+			publicRouter.ServeHTTP(rw, r)
 		}
+
 		next(rw, r)
 	}
+}
+
+func tokenHasExpired(authToken *jwt.Token) bool {
+	claim := authToken.Claims.(jwt.MapClaims)
+	iat := claim["iat"].(string)
+	issuedAtTime, err := fromFormattedTime(iat)
+	if err != nil {
+		return false
+	}
+	elapsedHours := time.Since(issuedAtTime).Hours()
+	if elapsedHours > 24 {
+		return true
+	}
+	return false
 }
 
 func (this *HttpServer) Get(path string, handler http.HandlerFunc) {
