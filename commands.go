@@ -13,28 +13,28 @@ import (
 var Commands map[string]cli.CommandFactory
 
 func init() {
-	prefixedUi := &cli.PrefixedUi{
-		InfoPrefix: "==> ",
-		Ui:         &cli.BasicUi{Writer: os.Stdout, Reader: os.Stdin, ErrorWriter: os.Stderr},
-	}
 
 	ui := &cli.ColoredUi{
 		InfoColor:  cli.UiColorGreen,
 		ErrorColor: cli.UiColorRed,
-		Ui:         prefixedUi,
+		Ui:         &cli.BasicUi{Writer: os.Stdout, Reader: os.Stdin, ErrorWriter: os.Stderr},
+	}
+
+	prefixedUi := &cli.PrefixedUi{
+		InfoPrefix: "==> ",
+		Ui:         ui,
 	}
 
 	Commands = map[string]cli.CommandFactory{
 
-		// "login": func() (cli.Command, error) {
-		// return &command.LoginCommand{
-		// Client: client,
-		// Ui:     ui,
-		// }, nil
-		// },
-
 		"server": func() (cli.Command, error) {
 			return &command.ServerCommand{
+				Ui: prefixedUi,
+			}, nil
+		},
+
+		"version": func() (cli.Command, error) {
+			return &command.VersionCommand{
 				Ui: ui,
 			}, nil
 		},
