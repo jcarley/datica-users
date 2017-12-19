@@ -1,3 +1,13 @@
+## Prerequisites
+
+  Tested and developed using the following specs.  You'll need a docker
+  host to run the example application.
+
+    * Mac OSX 10.12.6
+    * Docker for Mac 17.09.1
+    * curl
+    * Go 1.9.2 (This isn't entirely necessary unless running the app locally)
+
 ## Getting started
 
   To start up the application run the following commands
