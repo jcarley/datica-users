@@ -12,3 +12,6 @@ Ping the healthcheck
 
     curl http://localhost:3000/
 
+Remove dangling images
+
+    docker rmi $(docker images --quiet --filter "dangling=true")
