@@ -2,7 +2,6 @@ package users
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -94,8 +93,6 @@ func (this *UsersController) Create(rw http.ResponseWriter, req *http.Request) {
 		Salt:     salt,
 		Password: encryptedPassword,
 	}
-
-	fmt.Printf("=========> %d\n", len(user.Password))
 
 	if newUser, err := this.userRepository.AddUser(user); err == nil {
 		newUser.Password = ""

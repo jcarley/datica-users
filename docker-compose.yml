@@ -32,4 +32,5 @@ services:
     working_dir: /go/src/github.com/jcarley/datica-users
     volumes:
       - $PWD:/go/src/github.com/jcarley/datica-users
-
+    depends_on:
+      - db

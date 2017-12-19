@@ -100,6 +100,16 @@ database:
 		--volume="${CURRENT_DIR}:/go/src/${PROJECT}" \
 		shell ./scripts/build_database.sh
 
+package:
+	@echo "==> Packaging into container for ${CURRENT_DIR}..."
+	@docker-compose build package
+	@echo "==> Cleaning up dangling images ..."
+	@docker images --quiet --filter=dangling=true | xargs docker rmi
+
+run:
+	@echo "==> Running ${PROJECT} ..."
+	@docker-compose run --rm -p 3000:3000 package /datica-users server
+
 # test runs the test suite
 test:
 	@echo "==> Testing ${PROJECT}..."
@@ -130,5 +140,5 @@ db:
 	@echo "==> Starting up database..."
 	@docker-compose up -d db
 
-.PHONY: database shell bin bin-local bootstrap deps dev dist docker docker-push generate test test-race convey
+.PHONY: package database shell bin bin-local bootstrap deps dev dist docker docker-push generate test test-race convey
 
