@@ -20,6 +20,7 @@ func realMain() int {
 	// setup application logging
 	log.SetFlags(log.LstdFlags)
 
+	os.Mkdir("logs", 0666)
 	logFile, err := os.OpenFile("logs/application.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open log file: ", err)
