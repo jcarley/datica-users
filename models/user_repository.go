@@ -16,6 +16,8 @@ var (
 
 type UserProvider interface {
 	AddUser(user User) (User, error)
+	UpdateUser(userId string, user User) (User, error)
+	DeleteUser(userId string) error
 	FindByUsername(username string) (User, error)
 	FindUser(userId string) (User, error)
 }

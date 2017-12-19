@@ -5,12 +5,16 @@ import (
 	"net/http"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 	"github.com/jcarley/datica-users/helper/jsonutil"
+	"github.com/jcarley/datica-users/helper/structutil"
 	"github.com/jcarley/datica-users/models"
 	"github.com/jcarley/datica-users/web"
 )
 
 var (
+	ErrCreateUser       = errors.New("Failed to create user")
+	ErrDeleteUser       = errors.New("Deleting user failed")
 	ErrInvalidAuthToken = errors.New("Auth token is missing or invalid")
 )
 
@@ -26,13 +30,13 @@ func NewUsersController(userRepository *models.UserRepository) *UsersController 
 
 func (this *UsersController) Register(server *web.HttpServer) {
 	server.Post("/user", this.Create)
-	server.SecureGet("/", this.Show)
+	server.SecureGet("/", this.Index)
+	server.SecureGet("/user/{username}", this.Show)
+	server.SecurePut("/user/{username}", this.Update)
+	server.SecureDelete("/user/{username}", this.Delete)
 }
 
-func (this *UsersController) Create(rw http.ResponseWriter, req *http.Request) {
-}
-
-func (this *UsersController) Show(rw http.ResponseWriter, req *http.Request) {
+func (this *UsersController) Index(rw http.ResponseWriter, req *http.Request) {
 	if token, ok := web.TokenFromContext(req.Context()); ok {
 		claim := token.Claims.(jwt.MapClaims)
 		username := claim["username"].(string)
@@ -44,5 +48,104 @@ func (this *UsersController) Show(rw http.ResponseWriter, req *http.Request) {
 		}
 	} else {
 		web.Error(rw, ErrInvalidAuthToken, http.StatusUnauthorized)
+	}
+}
+
+func (this *UsersController) Show(rw http.ResponseWriter, req *http.Request) {
+
+	if token, ok := web.TokenFromContext(req.Context()); ok {
+		vars := mux.Vars(req)
+		routeUsername := vars["username"]
+
+		claim := token.Claims.(jwt.MapClaims)
+		tokenUsername := claim["username"].(string)
+
+		if routeUsername == tokenUsername {
+			if user, err := this.userRepository.FindByUsername(tokenUsername); err == nil {
+				user.Salt = ""
+				user.Password = ""
+				jsonutil.EncodeJSONToWriter(rw, &user)
+			}
+		} else {
+			web.Error(rw, ErrInvalidAuthToken, http.StatusUnauthorized)
+		}
+	}
+
+}
+
+func (this *UsersController) Create(rw http.ResponseWriter, req *http.Request) {
+
+	var json map[string]interface{}
+	jsonutil.DecodeJSONFromReader(req.Body, &json)
+	req.Body.Close()
+
+	email := json["email"].(string)
+	name := json["name"].(string)
+	password := json["password"].(string)
+
+	user := models.User{
+		Email:    email,
+		Name:     name,
+		Password: password,
+	}
+
+	if newUser, err := this.userRepository.AddUser(user); err == nil {
+		newUser.Password = ""
+		newUser.Salt = ""
+		rw.WriteHeader(http.StatusCreated)
+		jsonutil.EncodeJSONToWriter(rw, &newUser)
+	} else {
+		web.Error(rw, ErrCreateUser, http.StatusInternalServerError)
+	}
+
+}
+
+func (this *UsersController) Update(rw http.ResponseWriter, req *http.Request) {
+	if token, ok := web.TokenFromContext(req.Context()); ok {
+		vars := mux.Vars(req)
+		routeUsername := vars["username"]
+
+		claim := token.Claims.(jwt.MapClaims)
+		tokenUsername := claim["username"].(string)
+		tokenUserId := claim["userid"].(string)
+
+		if routeUsername == tokenUsername {
+
+			var json map[string]interface{}
+			jsonutil.DecodeJSONFromReader(req.Body, &json)
+			req.Body.Close()
+
+			var updateUser models.User
+			structutil.Decode(&updateUser, json)
+
+			if user, err := this.userRepository.UpdateUser(tokenUserId, updateUser); err == nil {
+				user.Salt = ""
+				user.Password = ""
+				jsonutil.EncodeJSONToWriter(rw, &user)
+			}
+		} else {
+			web.Error(rw, ErrInvalidAuthToken, http.StatusUnauthorized)
+		}
+
+	}
+}
+
+func (this *UsersController) Delete(rw http.ResponseWriter, req *http.Request) {
+	if token, ok := web.TokenFromContext(req.Context()); ok {
+		vars := mux.Vars(req)
+		routeUsername := vars["username"]
+
+		claim := token.Claims.(jwt.MapClaims)
+		tokenUsername := claim["username"].(string)
+		tokenUserId := claim["userid"].(string)
+
+		if routeUsername == tokenUsername {
+			if err := this.userRepository.DeleteUser(tokenUserId); err != nil {
+				web.Error(rw, ErrDeleteUser, http.StatusInternalServerError)
+			}
+		} else {
+			web.Error(rw, ErrInvalidAuthToken, http.StatusUnauthorized)
+		}
+
 	}
 }
