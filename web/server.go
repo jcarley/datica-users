@@ -12,6 +12,10 @@ import (
 	"github.com/tylerb/graceful"
 )
 
+const (
+	EXPIRATION_DURATION = 24
+)
+
 var (
 	ErrTokenExpired = errors.New("Token has expired")
 )
@@ -74,7 +78,7 @@ func tokenHasExpired(authToken *jwt.Token) bool {
 		return false
 	}
 	elapsedHours := time.Since(issuedAtTime).Hours()
-	if elapsedHours > 24 {
+	if elapsedHours > EXPIRATION_DURATION {
 		return true
 	}
 	return false
